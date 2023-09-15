@@ -54,7 +54,18 @@ failing node.
 * Once a simulation is computed by a node, results should be made available to the
 user who launched the distribution.
 
+### Q/A
+
+### Scenario
+
+
+### Self assessment policy
+
 ## Design
+
+### Architecture
+
+![](assets/img/Architecture.png)
 
 ### Structure
 
@@ -97,9 +108,14 @@ the first thing happening is the building of the various simulation each corresp
 
 ### Interactions
 
+#### Fault detection
 
+![Cluster fault detection interaction](assets/img/ClusterFaultDetector.png)
 
-### Architecture
+#### Batch distribution
+
+![](assets/img/Simulation%20distribution%20-%20interactions.png)
+
 
 ## Implementation details
 
@@ -130,6 +146,7 @@ Point to addreass
 ## Conlusion
 
 ### Future works
+
 ### What I've learned
 
 
