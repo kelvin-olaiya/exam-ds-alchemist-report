@@ -64,23 +64,23 @@ In the following the main entities componing the domain model will be described.
 
 * **Cluster** is an entity representing the collection of nodes that are currently connected forming a cluster. Through the cluster it is possible to obtain a `Dispatcher`, specifing the complexity that the nodes in the dispatcher should be able to handle. 
 
-* **ClusterNode**
+* **ClusterNode** represent a server node to which jobs can be distributed.
 
 * **Dispatcher** contains a subset of the nodes in the cluster. It is responsible of accepting `SimulationBatches` and distribute them across subset of nodes. Distribution is made according to a `DispatchStrategy`
 
 * **DispatchStrategy** it models the strategy with which the work load gets distributed to a collection of nodes (e.g *round-robin*).
 
-* **Complexity**
+* **Complexity** describes the complexity in terms of ram usage and memory occupation for the simulations in a batch.
 
-* **SimulationBatch**
+* **SimulationBatch** represents a simulation batch with its complexity. It is compose of a simulation configuration and a collection on simulation initializers.
 
-* **SimulationConfig**
+* **SimulationConfig** contains the general batch information such as the end step and end time of the simulations and a loader from which simulation instances will be created. `Dependencies` are files that must me made available to all servers in order to execute the simulation correctly.
 
-* **SimulationInitializer**
+* **SimulationInitializer** containts a combination of variables values what will be use to create a simulation instance. To every simulation initializer in a simulation batch will correspond a job for the cluster nodes.
 
-* **BatchResult**
+* **BatchResult** it models the result of a simulation batch that have been submitted via a `Dispatcher`. It gives information on the total number of result that have occured while executing the batch and an utility method to save all the distributed export files locally. 
 
-* **SimulationResult**
+* **SimulationResult** it the result of a single job. 
 
 
 ### Behavior
