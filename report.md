@@ -85,11 +85,19 @@ In the following the main entities componing the domain model will be described.
 
 ### Behavior
 
+#### Alchemist - server side
 ![Alchemist server behavior](assets/img/AlchemistServer-state.png)
+
+When Alchemist is launched in server mode, the server initially is in IDLE state. During this time the server is detecting any cluster node fault. It wait for job orders to execute and immidiately executes then when it receives them. When all jobs have been executed the server return to IDLE state and so on.
 
 ![Alchemist client behavior](assets/img/AlchemistClient-state.png)
 
+Client side, when Alchemist is launched in distributed batch mode, 
+the first thing happening is the building of the various simulation each corresponding to a job. When all simulation have been built, they are distributed to the cluster nodes. Client is then in WAITING state.While waiting the client will run a fault detection routine. In case a fault is detected, jobs dispatched to the faulty server are redistributed across the remaining cluster nodes. If no more node are available the user is notified of the error.
+
 ### Interactions
+
+
 
 ### Architecture
 
@@ -102,6 +110,8 @@ ETCD
 RABBITMQ
 
 PROTOCOL BUFFERS
+
+DOCKER
 
 I think etcd will be usefull to store configuration data
 
