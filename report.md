@@ -10,8 +10,6 @@ batch.
 
 ## Analysis
 
-In this section the meta-model the Alchemist simulator will be reported. Afterwards, once the functional and non-functional requirements have been formalised, considerations will be made on the distribution aspects.
-
 ### Alchemist's meta-model
 
 ![Alchemist's meta-model](assets/img/alchemist-meta-model.svg)
@@ -40,7 +38,7 @@ The meta-model is instantiated by one of the available incarnations that are:
 
 An incarnation of Alchemist includes a type definition of concentration, and possibly a set of specific conditions, actions and (rarely) environments and reactions that operate on such types. More information could be found on the Alchemist official website.
 
-### Requirements
+### Requirements analysis
 
 The Alchemist simulator already provide means for writing simulation configurations meant to be run locally. It also provide modes for executing batch of simulation. A simulation batch is a set of simulations, each differing by one ore more variables. This enables to test or execute the same configuration with different parameters. Running a simulation can be time consuming let alone running a simulation batch. Taking advange of multiple computing resource can be a way to reduce the time necessary to complete a simulation batch. The following functional requirement have been identified:
 
@@ -56,17 +54,72 @@ failing node.
 * Once a simulation is computed by a node, results should be made available to the
 user who launched the distribution.
 
+## Design
 
-## Technologies
+### Structure
 
-Apache Ignite has been choosen to take care of cluster formation, load balancing, distributed file system
+In the following the main entities componing the domain model will be described.
+
+![Model design](assets/img/Design-structure.png)
+
+* **Cluster** is an entity representing the collection of nodes that are currently connected forming a cluster. Through the cluster it is possible to obtain a `Dispatcher`, specifing the complexity that the nodes in the dispatcher should be able to handle. 
+
+* **ClusterNode**
+
+* **Dispatcher** contains a subset of the nodes in the cluster. It is responsible of accepting `SimulationBatches` and distribute them across subset of nodes. Distribution is made according to a `DispatchStrategy`
+
+* **DispatchStrategy** it models the strategy with which the work load gets distributed to a collection of nodes (e.g *round-robin*).
+
+* **Complexity**
+
+* **SimulationBatch**
+
+* **SimulationConfig**
+
+* **SimulationInitializer**
+
+* **BatchResult**
+
+* **SimulationResult**
+
+
+### Behavior
+
+![Alchemist server behavior](assets/img/AlchemistServer-state.png)
+
+![Alchemist client behavior](assets/img/AlchemistClient-state.png)
+
+### Interactions
+
+### Architecture
+
+## Implementation details
+
+### Technologies
+
+ETCD
+
+RABBITMQ
+
+PROTOCOL BUFFERS
 
 I think etcd will be usefull to store configuration data
 
-## Design
+class diagram
 
-For the result collection it could be useful to create a Global Exporter class
+Point to addreass
 
+- Design derived from preexisting work
+- First step of the work was to refactor existing work
+- Working on the alchemist-grid module
 
-### Architecture
+## Self-assessment
+
+## Deployment
+
+## Conlusion
+
+### Future works
+### What I've learned
+
 
