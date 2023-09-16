@@ -56,16 +56,30 @@ user who launched the distribution.
 
 ### Q/A
 
-### Scenario
+### Scenarios
+
+There are two main kinds of scenarios:
+
+* A user launches Alchemist in *server mode*, adding it self to an existing cluster, or creating a new one.
+
+* A user lunches Alchemist to distribute a batch of simulation across nodes in a cluster.
+
+![](assets/img/Use_cases.png)
 
 
 ### Self assessment policy
+
+Assessment will be made by means of automatic unit and integration testing. Testing should cover at least the requirements reported in the analysis.
+
 
 ## Design
 
 ### Architecture
 
 ![](assets/img/Architecture.png)
+
+The project architecture follow a client-server style. Communication between parties is made trough message exchange. Thus the need of Message broker, responsible of message delivery.
+All information necessary for the correct functioning of the system is held by a registry.  
 
 ### Structure
 
@@ -112,36 +126,66 @@ the first thing happening is the building of the various simulation each corresp
 
 ![Cluster fault detection interaction](assets/img/ClusterFaultDetector.png)
 
+In order to be able to respond to failure a simple fault detection routine has been designed.
+Every node in the cluster checks for the liveness of other nodes. 
+When a server AS01 want to see if another server AS02 is still running, it will send a healthCheckRequest to that server. If AS02 response withing the timeout period, then AS01 will consider it still alive. Otherwise the server is considered faulty and will be removed from the registry (Actually AS01 may send multiple health check requests and decide that after a number of missing replies AS02 is dead).
+
 #### Batch distribution
 
-![](assets/img/Simulation%20distribution%20-%20interactions.png)
+![Distribution interaction](assets/img/Simulation%20distribution%20-%20interactions.png)
+
+As for the distribution of the simulation batch, when a user launches the client firstly the client builds all the simulation. When this is done, the various simulation are submitted to the registry. Then the client sends a job order to the servers that were previously selected. 
+When a server receives the job order, it will retrieve the simulation from the registry, run it and submit the results back to the registry. After that, it will notify to the client that the job had been executed. At this point the client can get the results from the registry and make them available to the user. 
 
 
 ## Implementation details
 
 ### Technologies
 
-ETCD
+#### Etcd
 
-RABBITMQ
+Etcd is a distributed, reliable and strongly consistent key-value store. It has been used to store the most important data for the functioning of the system (The registry). In theory, if all nodes in the cluster chrashes, just by using the information stored in the registry it could be possible to resume any job that was executing before failure. Thus it is the most important technology that had been used in the project.
 
-PROTOCOL BUFFERS
+![](assets/img/Registry-KVStore.png)
 
-DOCKER
+#### RabbitMQ
 
-I think etcd will be usefull to store configuration data
+RabbitMQ is an open-source message broker based on the Advanced
+Message Queuing Protocol (AMQP) for reliable communication. RabbitMQ funziona come un intermediario. It supports point-to-point and publish/subscribe message patterns.
 
-class diagram
+![Communication queues](assets/img/Communication%20Queues.png)
 
-Point to addreass
+For this project a point-to-point has been chosen. In particular Every server has two message queues: one for receiving job orders and another to receive health check requests.
 
-- Design derived from preexisting work
-- First step of the work was to refactor existing work
-- Working on the alchemist-grid module
+#### Protocol Buffers
+
+Protocol Buffers are a language-neutral, platform-neutral extensible mechanism for serializing structured data. Once the structure of the data has been defined it is possible to use special generated source code to easily write and read your structured data to and from a variety of data streams and using a variety of languages.
+
+It has been used in this project for the serialization and deserialization of data for persistence in the registry and for message exchange.
+
 
 ## Self-assessment
 
+![Test results](assets/img/Test_results.png)
+
+The main project requirements have been tested using the Kotest testing framework. For the distribution tests, the non-deterministic testing features have been used. They include primitives such as:
+
+```kotlin
+eventually(duration) {
+    // code that gets executed for the specified duration
+    // until no exception is thrown
+}
+
+until(duration) {
+    // Boolean expression that should be true before the time passes the duration.
+}
+```
+
+These made the testing of the interaction between client and server much easier and idiomatic.
+
 ## Deployment
+
+### Usage example
 
 ## Conlusion
 
