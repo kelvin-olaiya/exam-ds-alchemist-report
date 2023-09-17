@@ -56,6 +56,18 @@ user who launched the distribution.
 
 ### Q/A
 
+- Q: ***How will a new node connect to a cluster?***  
+  A: The node should automatically discover and join other nodes in the network (service discovery)
+
+- Q: ***Currently existing exporters either produce files or write to an exernal database, how will it be in case of distribution?***  
+  A: Nothing should change in the case of exporting to an external database. In case of file exports, the files should be delivered back to the workstation that launched the node.
+
+- Q: ***What about the heterogeneity of the nodes in a cluster, how will the distribution strategy be affected***  
+  A: As a first step, heterogeneity should not be considered, all nodes should be seen as equally capable. In the future load balancing should be made based on the computation complexity in term of *cpu and memory usage*.
+
+- Q: ***What happens in case of a network partition between the client and the servers?***  
+  A: Simulation running on the server should continue running, and save the result somewhere, for future retrieval.
+
 ### Scenarios
 
 There are two main kinds of scenarios:
@@ -115,12 +127,15 @@ In the following the main entities componing the domain model will be described.
 
 When Alchemist is launched in server mode, the server initially is in IDLE state. During this time the server is detecting any cluster node fault. It wait for job orders to execute and immidiately executes then when it receives them. When all jobs have been executed the server return to IDLE state and so on.
 
+#### Alchemist - client side
 ![Alchemist client behavior](assets/img/AlchemistClient-state.png)
 
 Client side, when Alchemist is launched in distributed batch mode, 
 the first thing happening is the building of the various simulation each corresponding to a job. When all simulation have been built, they are distributed to the cluster nodes. Client is then in WAITING state.While waiting the client will run a fault detection routine. In case a fault is detected, jobs dispatched to the faulty server are redistributed across the remaining cluster nodes. If no more node are available the user is notified of the error.
 
 ### Interactions
+
+In this section two of the most important interaction will be described.
 
 #### Fault detection
 
@@ -150,7 +165,7 @@ Etcd is a distributed, reliable and strongly consistent key-value store. It has 
 
 #### RabbitMQ
 
-RabbitMQ is an open-source message broker based on the Advanced
+RabbitMQ[^rabbitmq] is an open-source message broker based on the Advanced
 Message Queuing Protocol (AMQP) for reliable communication. RabbitMQ funziona come un intermediario. It supports point-to-point and publish/subscribe message patterns.
 
 ![Communication queues](assets/img/Communication%20Queues.png)
@@ -168,22 +183,169 @@ It has been used in this project for the serialization and deserialization of da
 
 ![Test results](assets/img/Test_results.png)
 
-The main project requirements have been tested using the Kotest testing framework. For the distribution tests, the non-deterministic testing features have been used. They include primitives such as:
+A series of test have been written to assess whether the system complies with the project requirements. One of the main challenges, as with every distributed system in general, was dealing with asynchronous behavior and non-determinism. Fortunately the testing framework that was used (Kotest) provides a nice and idiomatic way to deal with this issues. For example to test that within a certain amount of time a node should connect to the cluster we could write:
+
 
 ```kotlin
-eventually(duration) {
-    // code that gets executed for the specified duration
-    // until no exception is thrown
-}
-
-until(duration) {
-    // Boolean expression that should be true before the time passes the duration.
+eventually(5.seconds) {
+    cluster.nodes shouldHaveSize 1
 }
 ```
 
-These made the testing of the interaction between client and server much easier and idiomatic.
+ or to be sure that the condition is verified before going on:
+
+```kotlin
+until(5.seconds) {
+    cluster.nodes.size == 1
+}
+```
+
+Aspects that have been test are related to the client and server, by them self and to the interaction between them.
 
 ## Deployment
+
+For the correct functioning of the system, first of all the RabbitMQ message broker and the etcd cluster should be deployed. The following docker compose file does the job:
+
+```yml
+version: '3.9'
+name: "alchemist-grid-test"
+services:
+  node_1:
+    image: bitnami/etcd
+    ports:
+      - 10000:2379
+    volumes:
+      - node_1_volume:/etcd_data
+    environment:
+      ETCD_NAME: node_1
+      ETCD_DATA_DIR: node_1
+      ETCD_ADVERTISE_CLIENT_URLS: http://node_1:2379
+      ETCD_LISTEN_CLIENT_URLS: http://0.0.0.0:2379
+      ETCD_INITIAL_ADVERTISE_PEER_URLS: http://node_1:2380
+      ETCD_LISTEN_PEER_URLS: http://0.0.0.0:2380
+      ETCD_INITIAL_CLUSTER: node_1=http://node_1:2380,node_2=http://node_2:2380,node_3=http://node_3:2380
+      ALLOW_NONE_AUTHENTICATION: 'yes'
+      ETCD_INITIAL_CLUSTER_STATE: new
+      ETCD_MAX_REQUEST_BYTES: 268435456
+
+  node_2:
+    image: bitnami/etcd
+    ports:
+      - 10001:2379
+    volumes:
+      - node_2_volume:/etcd_data
+    environment:
+      ETCD_NAME: node_2
+      ETCD_DATA_DIR: node_2
+      ETCD_ADVERTISE_CLIENT_URLS: http://node_2:2379
+      ETCD_LISTEN_CLIENT_URLS: http://0.0.0.0:2379
+      ETCD_INITIAL_ADVERTISE_PEER_URLS: http://node_2:2380
+      ETCD_LISTEN_PEER_URLS: http://0.0.0.0:2380
+      ETCD_INITIAL_CLUSTER: node_1=http://node_1:2380,node_2=http://node_2:2380,node_3=http://node_3:2380
+      ALLOW_NONE_AUTHENTICATION: 'yes'
+      ETCD_INITIAL_CLUSTER_STATE: new
+      ETCD_MAX_REQUEST_BYTES: 268435456
+  node_3:
+    image: bitnami/etcd
+    ports:
+      - 10002:2379
+    volumes:
+      - node_3_volume:/etcd_data
+    environment:
+      ETCD_NAME: node_3
+      ETCD_DATA_DIR: node_3
+      ETCD_ADVERTISE_CLIENT_URLS: http://node_3:2379
+      ETCD_LISTEN_CLIENT_URLS: http://0.0.0.0:2379
+      ETCD_INITIAL_ADVERTISE_PEER_URLS: http://node_3:2380
+      ETCD_LISTEN_PEER_URLS: http://0.0.0.0:2380
+      ETCD_INITIAL_CLUSTER: node_1=http://node_1:2380,node_2=http://node_2:2380,node_3=http://node_3:2380
+      ALLOW_NONE_AUTHENTICATION: 'yes'
+      ETCD_INITIAL_CLUSTER_STATE: new
+      ETCD_MAX_REQUEST_BYTES: 268435456
+  rabbitmq-service:
+    image: rabbitmq:3-management
+    restart: always
+    ports:
+      - "5672:5672"
+      - "8080:15672"
+    healthcheck:
+      test: rabbitmq-diagnostics -q status
+      interval: 10s
+      timeout: 10s
+      retries: 5
+volumes:
+  node_1_volume:
+  node_2_volume:
+  node_3_volume:
+```
+
+After that it is possible to launch one or more Alchemist Server. To do that we must right a configuration file telling the server how to connect to the message broker and to etcd cluster. Here's an example:
+
+```yaml
+etcd:
+  endpoints: ["http://localhost:10001", "http://localhost:10002", "http://localhost:10003"]
+rabbitmq:
+  username: "guest" # or ALCHEMIST_RABBITMQ_USERNAME=guest env variable
+  password: "guest" # or ALCHEMIST_RABBITMQ_PASSWORD=guest env variable
+  host: "localhost" # or ALCHEMIST_RABBITMQ_HOST=localhost env variable
+  port: 5672 # or ALCHEMIST_RABBITMQ_PORT=5672 env variable
+```
+
+Then we must write an alchemist configuration file that launches the server:
+
+```yaml
+incarnation: protelis
+launcher:
+  type: ServerLauncher
+  parameters: ["distribution-config.yml"]
+```
+
+Finally we can launch the client, by writing a simulation configuration and specifing that we are in interested in a distributed execution. For example:
+
+```yaml
+incarnation: sapere
+
+variables:
+  verticalEnd: &verticalEnd
+    type: LinearVariable
+    parameters: [5, 5, 6, 1]
+  horizontalEnd: &horizontalEnd
+    type: LinearVariable
+    parameters: [5, 5, 6, 1]
+
+network-model:
+  type: ConnectWithinDistance
+  parameters: [0.5]
+
+deployments:
+  type: Grid
+  parameters: [-5, -5, *horizontalEnd, *verticalEnd, 0.25, 0.25, 0.1, 0.1]
+  contents:
+    - in:
+        type: Rectangle
+        parameters: [-0.5, -0.5, 1, 1]
+      molecule: token
+  programs:
+    -
+      - time-distribution: 1
+        program: >
+          {token} --> {firing}
+      - program: "{firing} --> +{token}"
+#
+export:
+  - type: DistributedCSVExporter
+    parameters: ["time_export", 1.5]
+    data:
+      - time
+
+terminate:
+  - type: AfterTime
+    parameters: 6000
+
+launcher:
+  type: DistributedExecution
+  parameters: ["../alchemist-grid/src/test/resources/distribution-config.yml", [verticalEnd, horizontalEnd], "./"]
+```
 
 ### Usage example
 
@@ -194,3 +356,5 @@ These made the testing of the interaction between client and server much easier 
 ### What I've learned
 
 
+## Reference
+[^rabbitmq]: https://www.rabbitmq.com/
