@@ -1,3 +1,7 @@
+<style>
+
+</style>
+
 # Alchemist simulation batches distribution
 
 ## Abstract
@@ -12,7 +16,9 @@ batch.
 
 ### Alchemist's meta-model
 
-![Alchemist's meta-model](assets/img/alchemist-meta-model.svg)
+<p align=center>
+  <img src="assets/img/alchemist-meta-model.svg" alt="Alchemist's meta-model"/>
+</p>
 
 The main element's that compose the Alchemist meta-model are:
 
@@ -76,7 +82,9 @@ There are two main kinds of scenarios:
 
 * A user lunches Alchemist to distribute a batch of simulation across nodes in a cluster.
 
-![](assets/img/Use_cases.png)
+<p align=center>
+  <img src="assets/img/Use_cases.png" alt="Scenario"/>
+</p>
 
 
 ### Self assessment policy
@@ -88,7 +96,11 @@ Assessment will be made by means of automatic unit and integration testing. Test
 
 ### Architecture
 
-![System architecture](assets/img/Architecture.png)
+<p align=center>
+  <img src="assets/img/Architecture.png" alt=""/>
+</p>
+
+![System architecture]()
 
 The project architecture follow a client-server style. Communication between parties is made trough message exchange. Thus the need of Message broker, responsible of message delivery.
 All information necessary for the correct functioning of the system is held by a registry.  
@@ -97,6 +109,9 @@ All information necessary for the correct functioning of the system is held by a
 
 In the following the main entities componing the domain model will be described.
 
+<p align=center>
+  <img src="" alt=""/>
+</p>
 ![Model design](assets/img/Design-structure.png)
 
 * **Cluster** is an entity representing the collection of nodes that are currently connected forming a cluster. Through the cluster it is possible to obtain a `Dispatcher`, specifing the complexity that the nodes in the dispatcher should be able to handle. 
@@ -123,11 +138,19 @@ In the following the main entities componing the domain model will be described.
 ### Behavior
 
 #### Alchemist - server side
+
+<p align=center>
+  <img src="" alt=""/>
+</p>
 ![Alchemist server behavior](assets/img/AlchemistServer-state.png)
 
 When Alchemist is launched in server mode, the server initially is in IDLE state. During this time the server is detecting any cluster node fault. It wait for job orders to execute and immidiately executes then when it receives them. When all jobs have been executed the server return to IDLE state and so on.
 
 #### Alchemist - client side
+
+<p align=center>
+  <img src="" alt=""/>
+</p>
 ![Alchemist client behavior](assets/img/AlchemistClient-state.png)
 
 Client side, when Alchemist is launched in distributed batch mode, 
@@ -139,6 +162,9 @@ In this section two of the most important interaction will be described.
 
 #### Fault detection
 
+<p align=center>
+  <img src="" alt=""/>
+</p>
 ![Cluster fault detection interaction](assets/img/ClusterFaultDetector.png)
 
 In order to be able to respond to failure a simple fault detection routine has been designed.
@@ -147,6 +173,9 @@ When a server AS01 want to see if another server AS02 is still running, it will 
 
 #### Batch distribution
 
+<p align=center>
+  <img src="" alt=""/>
+</p>
 ![Distribution interaction](assets/img/Simulation%20distribution%20-%20interactions.png)
 
 As for the distribution of the simulation batch, when a user launches the client firstly the client builds all the simulation. When this is done, the various simulation are submitted to the registry. Then the client sends a job order to the servers that were previously selected. 
@@ -161,6 +190,9 @@ When a server receives the job order, it will retrieve the simulation from the r
 
 Etcd[^etcd] is a distributed, reliable and strongly consistent key-value store. It has been used to store the most important data for the functioning of the system (The registry). In theory, if all nodes in the cluster chrashes, just by using the information stored in the registry it could be possible to resume any job that was executing before failure. Thus it is the most important technology that had been used in the project.
 
+<p align=center>
+  <img src="" alt=""/>
+</p>
 ![Cluster registry structure](assets/img/Registry-KVStore.png)
 
 #### RabbitMQ
@@ -168,6 +200,9 @@ Etcd[^etcd] is a distributed, reliable and strongly consistent key-value store. 
 RabbitMQ[^rabbitmq] is an open-source message broker based on the Advanced
 Message Queuing Protocol (AMQP) for reliable communication. RabbitMQ funziona come un intermediario. It supports point-to-point and publish/subscribe message patterns.
 
+<p align=center>
+  <img src="" alt=""/>
+</p>
 ![Communication queues](assets/img/Communication%20Queues.png)
 
 For this project a point-to-point has been chosen. In particular Every server has two message queues: one for receiving job orders and another to receive health check requests.
@@ -181,6 +216,9 @@ It has been used in this project for the serialization and deserialization of da
 
 ## Self-assessment
 
+<p align=center>
+  <img src="" alt=""/>
+</p>
 ![Test results](assets/img/Test_results.png)
 
 A series of test have been written to assess whether the system complies with the project requirements. One of the main challenges, as with every distributed system in general, was dealing with asynchronous behavior and non-determinism. Fortunately the testing framework that was used (Kotest) provides a nice and idiomatic way to deal with this issues. For example to test that within a certain amount of time a node should connect to the cluster we could write:
