@@ -1,7 +1,7 @@
 # Alchemist simulation batches distribution
 
 ## Abstract
-Alchemist is an open-source and general-purpose simulator developed in
+Alchemist[^alchemist] is an open-source and general-purpose simulator developed in
 the University of Bologna. Simulation can be executed by writing their configurations in YAML. Sometimes it may be useful to execute the same configuration with different parameters, called variables. The set of simulation
 differing by their variables constitute a batch. Alchemist provides a way to
 launch a simulation batch sequentially. The aim of this project is to implement in Alchemist a batch distribution mechanism in order to parallelize
@@ -88,7 +88,7 @@ Assessment will be made by means of automatic unit and integration testing. Test
 
 ### Architecture
 
-![](assets/img/Architecture.png)
+![System architecture](assets/img/Architecture.png)
 
 The project architecture follow a client-server style. Communication between parties is made trough message exchange. Thus the need of Message broker, responsible of message delivery.
 All information necessary for the correct functioning of the system is held by a registry.  
@@ -153,15 +153,15 @@ As for the distribution of the simulation batch, when a user launches the client
 When a server receives the job order, it will retrieve the simulation from the registry, run it and submit the results back to the registry. After that, it will notify to the client that the job had been executed. At this point the client can get the results from the registry and make them available to the user. 
 
 
-## Implementation details
+## Implementation
 
 ### Technologies
 
 #### Etcd
 
-Etcd is a distributed, reliable and strongly consistent key-value store. It has been used to store the most important data for the functioning of the system (The registry). In theory, if all nodes in the cluster chrashes, just by using the information stored in the registry it could be possible to resume any job that was executing before failure. Thus it is the most important technology that had been used in the project.
+Etcd[^etcd] is a distributed, reliable and strongly consistent key-value store. It has been used to store the most important data for the functioning of the system (The registry). In theory, if all nodes in the cluster chrashes, just by using the information stored in the registry it could be possible to resume any job that was executing before failure. Thus it is the most important technology that had been used in the project.
 
-![](assets/img/Registry-KVStore.png)
+![Cluster registry structure](assets/img/Registry-KVStore.png)
 
 #### RabbitMQ
 
@@ -174,7 +174,7 @@ For this project a point-to-point has been chosen. In particular Every server ha
 
 #### Protocol Buffers
 
-Protocol Buffers are a language-neutral, platform-neutral extensible mechanism for serializing structured data. Once the structure of the data has been defined it is possible to use special generated source code to easily write and read your structured data to and from a variety of data streams and using a variety of languages.
+Protocol Buffers[^protobuf] are a language-neutral, platform-neutral extensible mechanism for serializing structured data. Once the structure of the data has been defined it is possible to use special generated source code to easily write and read your structured data to and from a variety of data streams and using a variety of languages.
 
 It has been used in this project for the serialization and deserialization of data for persistence in the registry and for message exchange.
 
@@ -208,7 +208,7 @@ For the correct functioning of the system, first of all the RabbitMQ message bro
 
 ```yml
 version: '3.9'
-name: "alchemist-grid-test"
+name: "alchemist-grid"
 services:
   node_1:
     image: bitnami/etcd
@@ -279,7 +279,7 @@ volumes:
   node_3_volume:
 ```
 
-After that it is possible to launch one or more Alchemist Server. To do that we must right a configuration file telling the server how to connect to the message broker and to etcd cluster. Here's an example:
+After that it is possible to launch one or more Alchemist Server. To do that we must right a configuration file telling the server how to connect to the message broker and to the etcd cluster. Here's an example:
 
 ```yaml
 etcd:
@@ -300,7 +300,43 @@ launcher:
   parameters: ["distribution-config.yml"]
 ```
 
-Finally we can launch the client, by writing a simulation configuration and specifing that we are in interested in a distributed execution. For example:
+Here in particular we are instructing the Alchemist's loading system to launch an instance of ServerLauncher by passing it the path of the distribution configuration that we wrote earlier.
+
+Finally, we can use the alchemist jar file to launch the server, by running the following command, specifying the configuration file.
+
+```bash
+java -jar alchemist.jar run server-config.yml" 
+```
+
+Once we've launched our desired number of server we can then launch the client. This means writing a simulation configuration and specifiyng that we are interested in launching a distributed execution.
+
+```yaml
+incarnation: sapere
+
+# ... simulation configuration ...
+
+launcher:
+  type: DistributedExecution
+  parameters: ["distribution-config.yml", ["list", "of", "variables", "..."], "./export-path/"]
+```
+
+The *DistributedExecution* launcher required parameters are:
+
+* The distribution configuration file: the same provided to various server, to enable the connection to the etcd cluster and to the message broker.
+
+* A list of variables from with the various simulation will be created, by computing the cartesian product of the values those variable can assume.
+
+* An export path: This will be the location in which eventual file will be saved.
+
+The command to run for launching the client is
+
+```bash
+java -jar alchemist.jar run client-config.yml
+```
+
+### Usage example
+
+A distribution example is available in [this repo](https://github.com/kelvin-olaiya/exam-ds-demo). In the example reported below, a diffusion program is exemplified: when a `token` is present locally, it is copied into neighboring nodes once per second; and as soon as two copies of `token` are present, one gets removed.
 
 ```yaml
 incarnation: sapere
@@ -331,7 +367,6 @@ deployments:
         program: >
           {token} --> {firing}
       - program: "{firing} --> +{token}"
-#
 export:
   - type: DistributedCSVExporter
     parameters: ["time_export", 1.5]
@@ -344,10 +379,10 @@ terminate:
 
 launcher:
   type: DistributedExecution
-  parameters: ["../alchemist-grid/src/test/resources/distribution-config.yml", [verticalEnd, horizontalEnd], "./"]
+  parameters: ["distribution-config.yml", [verticalEnd, horizontalEnd], "./export"]
 ```
 
-### Usage example
+Nodes are placed in a grid whos size is parameterized in its *vertical* and *horizontal* end. Exporting will be made to csv files using a `DistributedCSVExporter`. The export data is very trivial for sake of semplicity, it just report time samples.
 
 ## Conlusion
 
@@ -357,4 +392,7 @@ launcher:
 
 
 ## Reference
+[^alchemist]: https://alchemistsimulator.github.io
+[^protobuf]: https://protobuf.dev/
+[^etcd]: https://etcd.io
 [^rabbitmq]: https://www.rabbitmq.com/
