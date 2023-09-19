@@ -424,7 +424,7 @@ Nodes are placed in a grid whose size is parameterized in its *vertical* and *ho
 ### Future works
 
 One of the possible future works could be the creation of a monitoring dashboard from which it would be possible to see which job have been dispatched to which server, view the status of the submitted simulation, obtain the results (this means with the opportunity of recovering from a possible client-side network partition), and also pause stop or reschedule the submitted simulation. 
-Of course, also improvement to my proposed solution could be made, for example on the fault detection routine that requires a lot of messages travelling on the network, which is not ideal when there are many nodes in a cluster.
+Of course, also improvement to my proposed solution could be made, for example on the fault detection routine that requires a lot of messages travelling on the network, which is not ideal when there are many nodes in a cluster. 
 
 ### What I've learned
 
