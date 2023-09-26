@@ -4,6 +4,9 @@
 
 # Alchemist simulation batches distribution
 
+Student: Kelvin Oluwada Milare Obuneme Olaiya
+Email: [kelvinoluwada.olaiya@studio.unibo.it](mailto://kelvinoluwada.olaiya@studio.unibo.it)
+
 ## Abstract
 Alchemist[^alchemist] is an open-source and general-purpose simulator developed in
 the University of Bologna. Simulation can be executed by writing their configurations in YAML. Sometimes it may be useful to execute the same configuration with different parameters, called variables. The set of simulation
@@ -137,7 +140,7 @@ In the following the main entities composing the domain model will be described.
   <img src="assets/img/AlchemistServer-state.png" alt="Alchemist server behavior"/>
 </p>
 
-When Alchemist is launched in server mode, the server will initially be in an *IDLE* state. In this state the server will be detecting any cluster node fault. It will also wait for job orders to execute. Once a job order is received, it will be scheduled and executed as soon as possible, transitioning to a *RUNNING* state. When all jobs have been executed the server will return to the *IDLE* state, and so on.
+When Alchemist is launched in server mode, the server will initially be in an *IDLE* state. In this state the server will be detecting any cluster node fault. It will also wait for job orders to execute. Once a job order is received, it will be scheduled and executed as soon as possible, transitioning to a *EXECUTING* state. When all jobs have been executed the server will return to the *IDLE* state, and so on.
 
 #### Alchemist - client side
 
