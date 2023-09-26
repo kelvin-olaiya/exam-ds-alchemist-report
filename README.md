@@ -4,7 +4,7 @@
 
 # Alchemist simulation batches distribution
 
-Student: Kelvin Oluwada Milare Obuneme Olaiya
+Author: Kelvin Oluwada Milare Obuneme Olaiya  
 Email: [kelvinoluwada.olaiya@studio.unibo.it](mailto://kelvinoluwada.olaiya@studio.unibo.it)
 
 ## Abstract
